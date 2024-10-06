@@ -5,9 +5,8 @@ class base_test extends uvm_test;
   endfunction
   
   env  				e0;
-  bit[`LENGTH-1:0]  pattern = 4'b1011;
   gen_item_seq 		seq;
-  virtual  	decode_if 	vif;
+  virtual  	interface 	vif;
   
   virtual function void build_phase(uvm_phase phase);
     super.build_phase(phase);
@@ -17,12 +16,9 @@ class base_test extends uvm_test;
     
     // Get virtual IF handle from top level and pass it to everything
     // in env level
-    if (!uvm_config_db#(virtual decode_if)::get(this, "", "decode_if", vif))
+    if (!uvm_config_db#(virtual interface)::get(this, "", "interface", vif))
       `uvm_fatal("TEST", "Did not get vif")      
-    uvm_config_db#(virtual decode_if)::set(this, "e0.a0.*", "decode_if", vif);
-    
-    // Setup pattern queue and place into config db
-    uvm_config_db#(bit[`LENGTH-1:0])::set(this, "*", "ref_pattern", pattern);
+    uvm_config_db#(virtual interface)::set(this, "e0.a0.*", "interface", vif);
     
     // Create sequence and randomize it
     seq = gen_item_seq::type_id::create("seq");
@@ -30,18 +26,7 @@ class base_test extends uvm_test;
   endfunction
   
   virtual task run_phase(uvm_phase phase);
-    phase.raise_objection(this);
-    apply_reset();
-    seq.start(e0.a0.s0);
-    #200;
-    phase.drop_objection(this);
+    
   endtask
   
-  virtual task apply_reset();
-    vif.rstn <= 0;
-    //vif.in <= 0;
-    repeat(5) @ (posedge vif.clk);
-    vif.rstn <= 1;
-    repeat(10) @ (posedge vif.clk);
-  endtask
 endclass
